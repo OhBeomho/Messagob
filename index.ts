@@ -5,21 +5,8 @@ import fileStore from "session-file-store";
 import http from "http";
 import { Server } from "socket.io";
 import { renderFile } from "ejs";
-import { User } from "./src/db/user";
-
-declare module "express-session" {
-	interface SessionData {
-		user?: User;
-	}
-}
-
-declare module "http" {
-	interface IncomingMessage {
-		session: Session & {
-			user?: User;
-		}
-	}
-}
+import userRouter from "./src/routers/userRouter";
+import chatRouter from "./src/routers/chatRouter";
 
 const app = express();
 const server = http.createServer(app);
@@ -37,6 +24,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session);
 
+app.use("/user", userRouter);
+app.use("/chat", chatRouter);
+
 app.set("view engine", "ejs");
 app.set("views", "views");
 
@@ -48,9 +38,8 @@ io.on("connection", (socket) => {
 	const user = socket.request.session.user;
 	user && socket.join(user.username);
 
-	// TODO: If target user is online, send chat data.
-	socket.on("message", async (data) => {
-		if (!user || (await io.in(data.username).fetchSockets()).length < 1) return;
+	socket.on("message", (data) => {
+		if (!user) return;
 
 		io.to(data.username).to(user.username).emit("message", {
 			username: user.username,
