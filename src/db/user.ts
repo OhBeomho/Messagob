@@ -10,7 +10,7 @@ export class User {
 	static async getUser(username: string) {
 		const { rows } = await db.query("SELECT friends, chatrooms, friendrequests, roomrequests FROM user WHERE username = $1", [username]);
 		if (!rows[0]) {
-			return new User("Not found", [], [], [], []);
+			return new User("-", [], [], [], []);
 		} else {
 			const { friends, chatrooms, friendrequests, roomrequests } = rows[0];
 			return new User(username, friends, friendrequests, roomrequests, chatrooms);
@@ -19,7 +19,9 @@ export class User {
 
 	static async createUser(username: string, password: string) {
 		if (!await UserManager.checkUsername(username)) {
-			throw new Error("Already exists.");
+			throw new Error("이미 존재하는 사용자입니다.");
+		} else if (username.length < 3) {
+			throw new Error("사용자명은 3자 이상이여야 합니다.");
 		}
 
 		await db.query("INSERT INTO user(username, password) VALUES($1, $2)", [username, password]);
