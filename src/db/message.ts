@@ -23,6 +23,14 @@ export class MessageManager {
 		}
 	}
 
+	static async save(username: string, content: string) {
+		if (!username || !content) {
+			return;
+		}
+
+		await db.query("INSERT INTO message(username, content, t) VALUES($1, $2, $3)", [username, content, new Date()]);
+	}
+
 	static async *list(messages: number[]) {
 		for (let message of messages) {
 			yield await MessageManager.getMessage(message);
