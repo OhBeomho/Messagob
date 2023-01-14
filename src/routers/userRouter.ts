@@ -1,4 +1,4 @@
-import { NextFunction, Router } from "express";
+import { Router } from "express";
 import { User, UserManager } from "../db/user";
 
 const router = Router();
@@ -23,7 +23,7 @@ router.route("/login")
 	});
 
 router.route("/signup")
-	.get((_, res) => res.render("signup.html"))
+	.get((_req, res) => res.render("signup.html"))
 	.post((req, res, next) => {
 		const { username, password, confirmPassword } = req.body;
 
@@ -37,5 +37,20 @@ router.route("/signup")
 				.catch((e) => next(e));
 		}
 	});
+
+router.get("/checkusername/:username", (req, res) => {
+	const { username } = req.params;
+
+	if (!username) {
+		return;
+	} else if (username.length < 3) {
+		res.status(500).send("사용자명은 3자 이상이여야 합니다.");
+		return;
+	}
+
+	UserManager.checkUsername(username)
+		.then((result) => res.status(200).send(result))
+		.catch(() => res.sendStatus(500));
+});
 
 export default router;
