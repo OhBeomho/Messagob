@@ -38,6 +38,15 @@ router.route("/signup")
 		}
 	});
 
+router.get("/logout", (req, res) => {
+	if (!req.session.user) {
+		return;
+	}
+
+	req.session.destroy(() => {});
+	res.redirect("/");
+});
+
 router.get("/checkusername/:username", (req, res) => {
 	const { username } = req.params;
 
