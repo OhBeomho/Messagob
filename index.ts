@@ -4,9 +4,9 @@ import express_session, { Session } from "express-session";
 import fileStore from "session-file-store";
 import http from "http";
 import { Server } from "socket.io";
-import { renderFile } from "ejs";
 import userRouter from "./src/routers/userRouter";
 import chatRouter from "./src/routers/chatRouter";
+import { User } from "./src/db/user";
 
 const app = express();
 const server = http.createServer(app);
@@ -19,6 +19,20 @@ const session = express_session({
 	store: new FileStore()
 });
 
+declare module "express-session" {
+	export interface SessionData {
+		user?: User;
+	}
+}
+
+declare module "http" {
+	export interface IncomingMessage {
+		session: Session & {
+			user?: User;
+		}
+	}
+}
+
 app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -30,7 +44,7 @@ app.use("/chat", chatRouter);
 app.set("view engine", "ejs");
 app.set("views", "views");
 
-app.engine("html", renderFile);
+app.get("/", (req, res) => res.render("index", { user: req.session.user }));
 
 io.use((socket, next) => session(socket.request as Request, {} as Response, next as NextFunction));
 
