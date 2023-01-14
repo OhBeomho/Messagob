@@ -1,24 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Messagob</title>
 </head>
+
 <body>
-<!--
+	<%- include("header.ejs") %>
+	<% if (user) { %>
+		<!--
+			TODO:
 
-	TODO:
+			Flex display
+			3/10 Left - Friend list
+			2/10 Middle - Room list
+			5/10 Right - Chat area
 
-	Main page.
-
-	If not logged in, show title (Messagob) and simple description.
-	And also login button.
-
-	If logged in, Show chat rooms, friend list, and the dialog that shows room request, friend request list.
-	Also chat area (include chat.ejs)
-
--->	
+			Dialog
+			Room request list, Friend request list dialog
+			Friend request dialog
+		-->
+	<% } else { %>
+		<h1>Messagob</h1>
+		<p>간단한 채팅 앱.</p>
+		<p><button onclick="location.assign('/user/login')">로그인하기</button></p>
+	<% } %>
+	<%- include("footer.ejs") %>
 </body>
+
 </html>
