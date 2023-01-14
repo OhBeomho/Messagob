@@ -4,7 +4,7 @@ import { User, UserManager } from "../db/user";
 const router = Router();
 
 router.route("/login")
-	.get((_, res) => res.render("login.html"))
+	.get((_, res) => res.render("login"))
 	.post((req, res, next) => {
 		const { username, password } = req.body;
 
@@ -23,7 +23,7 @@ router.route("/login")
 	});
 
 router.route("/signup")
-	.get((_req, res) => res.render("signup.html"))
+	.get((_req, res) => res.render("signup"))
 	.post((req, res, next) => {
 		const { username, password, confirmPassword } = req.body;
 

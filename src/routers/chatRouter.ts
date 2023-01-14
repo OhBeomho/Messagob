@@ -5,7 +5,7 @@ import wrap from "./asyncWrapper";
 
 const router = Router();
 
-router.post("/save", (req, _) => {
+router.post("/save", (req, _res) => {
 	if (!req.session.user) {
 		return;
 	}
@@ -16,7 +16,7 @@ router.post("/save", (req, _) => {
 	MessageManager.save(username, content);
 });
 
-router.get("/list/:roomid", wrap(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/list/:roomid", wrap(async (req: Request, res: Response, _next: NextFunction) => {
 	const { roomid } = req.params;
 	const room = await ChatRoomManager.getChatRoom(parseInt(roomid));
 
