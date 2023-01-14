@@ -13,7 +13,9 @@ export class ChatRoomManager {
 	static async getChatRoom(id: number) {
 		const { rows } = await db.query("SELECT roomname, users, messages, owner FROM chatroom WHERE id = $1", [id]);
 		if (!rows[0]) {
-			return {} as ChatRoom;
+			return {
+				id: -1
+			} as ChatRoom;
 		} else {
 			const { roomname, users, messages, owner } = rows[0];
 
