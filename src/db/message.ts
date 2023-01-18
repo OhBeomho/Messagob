@@ -1,4 +1,3 @@
-import { ChatRoomManager } from "./chatroom";
 import db from "./database";
 
 export interface Message {

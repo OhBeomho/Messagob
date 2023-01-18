@@ -1,9 +1,31 @@
 socket.on("message", (data) => {
 	if (data.roomID !== currentRoomID) {
-		// TODO: 방 메시지 알림
+		const roomElement = document.querySelector(`.room[data-roomid="${data.roomID}"]`);
+		if (roomElement.querySelector(".unread")) {
+			roomElement.querySelector(".unread").innerText = Number(roomElement.querySelector(".unread").innerText) + 1;
+		} else {
+			const unreadMessage = document.createElement("div");
+			unreadMessage.classList.add("unread");
+			unreadMessage.innerText = 1;
+			roomElement.appendChild(unreadMessage);
+		}
+
+		return;
 	}
 
-	// TODO: 메시지 목록에 메시지 추가
+	const messageElement = document.createElement("li");
+	messageElement.classList.add("message", data.username === username ? "me" : "other");
+	messageElement.innerHTML = `
+		<div class="profile">
+			<img src="/images/user.png" alt="" /><br />
+			<b>${data.username}</b>
+		</div>
+		<div class="message-bubble">${data.message}</div>
+		<div class="time">${new Date().toLocaleTimeString("en-US")}</div>
+	`;
+
+	messageList.appendChild(messageElement);
+	messageList.scrollTo(0, messageList.scrollHeight);
 });
 
 messageInput.addEventListener("keydown", (e) => {
@@ -19,8 +41,6 @@ function sendMessage(message) {
 		return;
 	}
 
-	socket.emit("message", {
-		message,
-		roomID: currentRoomID
-	});
+	socket.emit("message", message);
+	messageInput.value = "";
 }

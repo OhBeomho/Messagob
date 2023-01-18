@@ -15,8 +15,9 @@ export class User {
 		}
 	}
 
-	static async getUsers(usernameArray: string) {
-		return (await db.query(`SELECT * FROM "user" WHERE username = ANY($1)`, [usernameArray])).rows as User[];
+	static async getUsers(usernameArray: string[]) {
+		const users = await Promise.all(usernameArray.map((username) => User.getUser(username)));
+		return users;
 	}
 
 	static async createUser(username: string, password: string) {
@@ -51,24 +52,23 @@ export class User {
 	async accept(username: string) {
 		if (!(await db.query(`SELECT EXISTS(SELECT * FROM "user" WHERE username = $1 AND $2 = ANY(friendrequests))`, [this.username, username]))) {
 			throw new Error(username + "님의 요청이 없습니다.");
-		} else {
-			await db.query(`UPDATE "user" SET friendrequests = ARRAY_REMOVE(friendrequests, $1) WHERE username = $2`, [username, this.username]);
-			await db.query(`UPDATE "user" SET friends = ARRAY_APPEND(friends, $1) WHERE username = $2`, [username, this.username]);
-			await db.query(`UPDATE "user" SET friends = ARRAY_APPEND(friends, $1) WHERE username = $2`, [this.username, username]);
-
-			this.friendRequests.splice(this.friendRequests.indexOf(username), 1);
-			this.friends.push(username);
 		}
+
+		await db.query(`UPDATE "user" SET friendrequests = ARRAY_REMOVE(friendrequests, $1) WHERE username = $2`, [username, this.username]);
+		await db.query(`UPDATE "user" SET friends = ARRAY_APPEND(friends, $1) WHERE username = $2`, [username, this.username]);
+		await db.query(`UPDATE "user" SET friends = ARRAY_APPEND(friends, $1) WHERE username = $2`, [this.username, username]);
+
+		this.friendRequests.splice(this.friendRequests.indexOf(username), 1);
+		this.friends.push(username);
 	}
 
 	async decline(username: string) {
 		if (!(await db.query(`SELECT EXISTS(SELECT * FROM "user" WHERE username $1 SND $2 = ANY(friendrequests))`, [this.username, username]))) {
 			throw new Error(username + "님의 요청이 없습니다.");
-		} else {
-			await db.query(`UPDATE "user" SET friendrequests = ARRAY_REMOVE(friendrequests, $1) WHERE username = $2`, [username, this.username]);
-
-			this.friendRequests.splice(this.friendRequests.indexOf(username), 1);
 		}
+
+		await db.query(`UPDATE "user" SET friendrequests = ARRAY_REMOVE(friendrequests, $1) WHERE username = $2`, [username, this.username]);
+		this.friendRequests.splice(this.friendRequests.indexOf(username), 1);
 	}
 
 	async inviteRoom(roomID: number) {
@@ -89,6 +89,7 @@ export class User {
 
 		await db.query(`UPDATE "user" SET roomrequests = ARRAY_REMOVE(roomrequests, $1) WHERE username = $2`, [roomID, this.username]);
 		await db.query("UPDATE chatroom SET users = ARRAY_APPEND(users, $1) WHERE id = $2", [this.username, roomID]);
+		await db.query(`UPDATE "user" SET chatrooms = ARRAY_APPEND(chatrooms, $1) WHERE username = $2`, [roomID, this.username]);
 
 		this.roomRequests.splice(this.roomRequests.indexOf(this.roomRequests.find((room) => room.id === roomID) as ChatRoom), 1);
 		this.chatRooms.push(await ChatRoomManager.getChatRoom(roomID));

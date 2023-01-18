@@ -12,7 +12,7 @@ db.connect((err) => {
 
 	console.log("Connected to database.");
 
-	db.query("CREATE TABLE IF NOT EXISTS message(id SERIAL PRIMARY KEY, content TEXT NOT NULL, t TIME NOT NULL, username TEXT NOT NULL)");
+	db.query("CREATE TABLE IF NOT EXISTS message(id SERIAL PRIMARY KEY, content TEXT NOT NULL, t TIMESTAMP NOT NULL, username TEXT NOT NULL)");
 	db.query(`CREATE TABLE IF NOT EXISTS "user"(username TEXT PRIMARY KEY, password TEXT NOT NULL, friends TEXT[] DEFAULT '{}', chatrooms INTEGER[] DEFAULT '{}', friendrequests TEXT[] DEFAULT '{}', roomrequests INTEGER[] DEFAULT '{}')`);
 	db.query("CREATE TABLE IF NOT EXISTS chatroom(id SERIAL PRIMARY KEY, owner TEXT NOT NULL, roomname TEXT NOT NULL, users TEXT[] DEFAULT '{}', messages INTEGER[] DEFAULT '{}')");
 });

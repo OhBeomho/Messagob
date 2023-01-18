@@ -11,7 +11,7 @@ router.post("/inviteroom/:roomid", (req, res) => {
 	User.getUsers(friends)
 		.then((users) => {
 			for (let user of users) {
-				user.inviteRoom(parseInt(roomid));
+				user.inviteRoom(parseInt(roomid)).catch((e) => res.status(500).send(e));
 			}
 		}).catch(() => res.sendStatus(500));
 });
@@ -42,7 +42,10 @@ router.get("/leaveroom/:roomid", (req, _res) => {
 });
 
 router.get("/createroom/:roomname", (req, res) => {
-	// TODO: Code.
+	const { roomname } = req.params;
+	req.session.user && ChatRoomManager.createRoom(roomname, req.session.user)
+		.then(() => res.sendStatus(200))
+		.catch(() => res.sendStatus(500));
 });
 
 export default router;

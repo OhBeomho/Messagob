@@ -32,8 +32,9 @@ export class ChatRoomManager {
 		return (await db.query("SELECT * FROM chatroom WHERE id = ANY($1)", [chatRoomIDArray])).rows as ChatRoom[];
 	}
 
-	static async createRoom(roomname: string) {
-		await db.query("INSERT INTO chatroom(roomname) VALUES($1)", [roomname]);
+	static async createRoom(roomname: string, owner: string) {
+		const id = (await db.query("INSERT INTO chatroom(roomname, owner) VALUES($1, $2) RETURNING id", [roomname, owner])).rows[0].id;
+		await db.query(`UPDATE "user" SET chatrooms = ARRAY_APPEND(chatrooms, $1) WHERE username = $2`, [id, owner]);
 	}
 
 	static async addMessage(id: number, message: Message) {
@@ -41,8 +42,8 @@ export class ChatRoomManager {
 		if (chatRoom.messages.length >= 100) {
 			chatRoom.messages.shift();
 		}
-	
-		await db.query("UPDATE chatroom SET messages = $1 WHERE id = $2", [chatRoom.messages.map((message) => message.id), id]);
+
 		chatRoom.messages.push(message);
+		await db.query("UPDATE chatroom SET messages = $1 WHERE id = $2", [chatRoom.messages.map((message) => message.id), id]);
 	}
 }

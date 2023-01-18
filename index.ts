@@ -65,23 +65,25 @@ io.on("connection", (socket) => {
 	const user = socket.request.session.user;
 	let currentRoomID = -1;
 
-	socket.on("message", (data) => {
+	socket.on("message", (message) => {
 		if (!user || currentRoomID === -1) return;
 
-		io.to(data.roomID).emit("message", {
+		io.to(String(currentRoomID)).emit("message", {
 			username: user,
-			message: data.message,
+			message,
 			roomID: currentRoomID
 		});
 
-		MessageManager.save(user, data.message)
-			.then((message) => ChatRoomManager.addMessage(parseInt(data.roomID), message));
+		MessageManager.save(user, message)
+			.then((message) => ChatRoomManager.addMessage(currentRoomID, message));
 	});
 	socket.on("room", (roomID) => {
-		socket.leave(String(currentRoomID));
-		socket.join(String(roomID));
-
 		currentRoomID = roomID;
+	});
+	socket.on("rooms", (roomIDArray) => {
+		for (let roomID of roomIDArray) {
+			socket.join(String(roomID));
+		}
 	});
 });
 

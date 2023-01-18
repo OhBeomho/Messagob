@@ -11,14 +11,22 @@ const sendButton = document.getElementById("send");
 const friendRequestInput = document.getElementById("friendRequestInput");
 const inviteRoomSelect = document.getElementById("inviteRoomSelect");
 const inviteFriendSelect = document.getElementById("inviteFriendSelect");
+const roomnameInput = document.getElementById("roomnameInput");
 
 window.addEventListener("load", () => {
 	const rooms = document.querySelectorAll(".room");
+	const roomIDArray = [];
+
 	for (let roomElement of rooms) {
+		roomIDArray.push(roomElement.dataset.roomid);
+
 		roomElement.addEventListener("click", () => {
-			if (![XMLHttpRequest.UNSET, XMHttpRequest.DONE].includes(xhr.readyState)) {
+			if (![0, 4].includes(xhr.readyState)) {
 				return;
 			}
+
+			const unreadMessage = roomElement.querySelector(".unread");
+			unreadMessage && unreadMessage.remove();
 
 			const roomname = roomElement.querySelector("b").innerText;
 			currentRoomID = parseInt(roomElement.dataset.roomid);
@@ -29,6 +37,8 @@ window.addEventListener("load", () => {
 			showMessages(currentRoomID);
 		});
 	}
+
+	socket.emit("rooms", [roomIDArray]);
 });
 
 function showMessages(roomID) {
@@ -58,14 +68,14 @@ function showMessages(roomID) {
 
 				for (let message of messages) {
 					const messageElement = document.createElement("li");
-					messageElement.classList.add("message");
+					messageElement.classList.add("message", message.username === username ? "me" : "other");
 					messageElement.innerHTML = `
 						<div class="profile">
 							<img src="/images/user.png" alt="" /><br />
 							<b>${message.username}</b>
 						</div>
 						<div class="message-bubble">${message.content}</div>
-						<div class="time">${message.time.toLocaleTimeString("en-US")}</div>
+						<div class="time">${new Date(message.t).toLocaleTimeString("en-US")}</div>
 					`;
 
 					messageList.appendChild(messageElement);
@@ -100,7 +110,7 @@ function sendRequest(method, url, data, callback) {
 			callback(xhr.status, xhr.response);
 		}
 	};
-	xhr.send(data);
+	xhr.send(JSON.stringify(data));
 }
 
 function acceptFriend(username) {
@@ -117,9 +127,10 @@ function acceptFriend(username) {
 		document.getElementById("Request" + username).remove();
 
 		const friendElement = document.createElement("li");
+		friendElement.classList.add("friend");
 		friendElement.innerHTML = `	
 			<img src="/images/user.png" alt="" />
-			<b><%= friend %></b>
+			<b>${username}</b>
 		`;
 
 		if (friendList.querySelector(".no-friends")) {
@@ -149,16 +160,33 @@ function acceptRoom(roomID) {
 		document.getElementById("RoomRequest" + roomID).remove();
 
 		const roomElement = document.createElement("li");
+		roomElement.classList.add("room");
+		roomElement.dataset.roomid = roomID;
 		roomElement.innerHTML = `	
 			<img src="/images/chat.png" alt="" />
 			<b>${response}</b>
 		`;
+		roomElement.addEventListener("click", () => {
+			if (![XMLHttpRequest.UNSET, XMHttpRequest.DONE].includes(xhr.readyState)) {
+				return;
+			}
+
+			const roomname = roomElement.querySelector("b").innerText;
+			currentRoomID = parseInt(roomElement.dataset.roomid);
+
+			socket.emit("room", currentRoomID);
+
+			document.querySelector("#chat .title").innerText = "채팅 - " + roomname;
+			showMessages(currentRoomID);
+		});
 
 		if (roomList.querySelector(".no-rooms")) {
 			roomList.innerHTML = "";
 		}
 
 		roomList.appendChild(roomElement);
+
+		socket.emit("rooms", [roomID]);
 	});
 }
 
@@ -185,18 +213,39 @@ function requestFriend() {
 
 function invite() {
 	const inviteRoom = inviteRoomSelect.value;
-	const targetFriends = inviteFriendSelect.selectedOptions;
+	const selectedOptions = inviteFriendSelect.selectedOptions;
+	const targetFriends = [];
+
+	for (let option of selectedOptions) {
+		targetFriends.push(option.value);
+	}
 
 	if (!inviteRoom || !targetFriends.length) {
 		return;
 	}
 
-	sendRequest("POST", "/room/inviteroom/", inviteRoom, { friends: targetFriends }, (status, response) => {
+	sendRequest("POST", "/room/inviteroom/" + inviteRoom, { friends: targetFriends }, (status, response) => {
+		if (status === 500) {
+			alert("서버에서 오류가 발생하였습니다.");
+			console.error(response);
+			return;
+		}
+
+		alert("초대 요청을 보냈습니다.");
+	});
+}
+
+function createRoom() {
+	if (!roomnameInput.value) {
+		return;
+	}
+
+	sendRequest("GET", "/room/createroom/" + roomnameInput.value, {}, (status, _response) => {
 		if (status === 500) {
 			alert("서버에서 오류가 발생하였습니다.");
 			return;
 		}
 
-		alert("초대 요청을 보냈습니다.");
+		location.reload();
 	});
 }

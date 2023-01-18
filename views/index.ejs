@@ -19,6 +19,7 @@
 					<a id="openList">요청 목록</a>
 					<a id="openRequest">친구 요청하기</a>
 					<a id="openInvite">방 초대하기</a>
+					<a id="openCreate">방 만들기</a>
 					<a href="/user/logout">로그아웃:<%= user.username %></a>
 				</div>
 			</nav>
@@ -100,7 +101,7 @@
 			<button class="close">X</button>
 			<h1>친구 요청하기</h1>
 			<div>
-				<input type="text" id="friendRequestInput" />
+				사용자명: <input type="text" id="friendRequestInput" /><br />
 				<button onclick="requestFriend()">친구 요청 보내기</button>
 			</div>
 		</dialog>
@@ -112,11 +113,11 @@
 					<% for (let room of user.chatRooms) { %>
 						<option value="<%= room.id %>"><%= room.roomname %></option>
 					<% } %>
-					<% if (!user.friends.length) { %>
+					<% if (!user.chatRooms.length) { %>
 						<option value="-1" selected disabled>없음</option>
 					<% } %>
 				</select><br />
-				초대할 친구: <select id="inviteFriendSelect" multiple>
+				초대할 친구: <br /><select id="inviteFriendSelect" multiple>
 					<% for (let friend of user.friends) { %>
 						<option value="<%= friend %>"><%= friend %></option>
 					<% } %>
@@ -127,12 +128,23 @@
 				<button onclick="invite()">초대 요청 보내기</button>
 			</div>
 		</dialog>
+		<dialog id="createDialog">
+			<button class="close">X</button>
+			<h1>방 만들기</h1>
+			<div>
+				방 이름: <input type="text" id="roomnameInput" /><br />
+				<button onclick="createRoom()">방 만들기</button>
+			</div>
+		</dialog>
 
+		<script>
+			const username = "<%= user.username %>";
+		</script>
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="/js/index.js"></script>
 		<script src="/js/chat.js"></script>
 		<script>
-			const openDialogLinks = document.querySelectorAll("#openList, #openRequest, #openInvite");
+			const openDialogLinks = document.querySelectorAll("#openList, #openRequest, #openInvite, #openCreate");
 			const closeButtons = document.querySelectorAll(".close");
 
 			for (let link of openDialogLinks) {
