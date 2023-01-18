@@ -6,27 +6,150 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Messagob</title>
+	<link rel="stylesheet" href="/css/main.css">
+	<link rel="stylesheet" href="/css/index.css">
 </head>
 
 <body>
-	<%- include("header.ejs") %>
 	<% if (user) { %>
-		<!--
-			TODO:
+		<header>
+			<nav>
+				<a href="/" class="brand">Messagob</a>
+				<div>
+					<a id="openList">요청 목록</a>
+					<a id="openRequest">친구 요청하기</a>
+					<a id="openInvite">방 초대하기</a>
+					<a href="/user/logout">로그아웃:<%= user.username %></a>
+				</div>
+			</nav>
+		</header>
+		<main id="limv">
+			<section id="friends">
+				<div class="title">친구 목록</div>
+				<ul id="friendList">
+					<% for (let friend of user.friends) { %>
+						<li class="friend">
+							<img src="/images/user.png" alt="" />
+							<b><%= friend %></b>
+						</li>
+					<% } %>
+					<% if (!user.friends.length) { %>
+						<li class="no-friends">친구가 없습니다.</li>
+					<% } %>
+				</ul>
+			</section>
+			<section id="rooms">
+				<div class="title">방 목록</div>
+				<ul id="roomList">
+					<% for (let room of user.chatRooms) { %>
+						<li class="room" data-roomid="<%= room.id %>">
+							<img src="/images/chat.png" alt="" />
+							<b><%= room.roomname %></b>
+						</li>
+					<% } %>
+					<% if (!user.friends.length) { %>
+						<li class="no-rooms">방에 참가하지 않았습니다.</li>
+					<% } %>
+				</ul>
+			</section>
+			<section id="chat">
+				<div class="title">채팅</div>
+				<ul id="messageList">
+				</ul>
+				<div id="input">
+					<textarea id="messageInput" rows="4"></textarea>
+					<button id="send">전송</button>
+				</div>
+			</section>
+		</main>
+		<dialog id="listDialog">
+			<button class="close">X</button>
+			<h1>요청 목록</h1>
+			<div>
+				<div>
+					<ul>
+						<% for (let friendRequest of user.friendRequests) { %>
+							<li id="Request<%= friendRequest %>">
+								<b><%= friendRequest %></b>의 친구 요청
+								<button style="color: rgb(0, 150, 0)" onclick="acceptFriend('<%= friendRequest %>')">수락</button>
+								<button style="color: rgb(150, 0, 0)" onclick="declineFriend('<%= friendRequest %>')">거절</button>
+							</li>
+						<% } %>
+						<% if (!user.friendRequests.length) { %>
+							<li>친구 요청을 받지 않았습니다.</li>
+						<% } %>
+					</ul>
+				</div>
+				<div>
+					<ul>
+						<% for (let roomRequest of user.roomRequests) { %>
+							<li id="RoomRequest<%= roomRequest.id %>">
+								<b><%= roomRequest.roomname %></b>방 초대 요청
+								<button style="color: rgb(0, 150, 0)" onclick="acceptRoom(Number('<%= roomRequest.id %>'))">수락</button>
+								<button style="color: rgb(150, 0, 0)" onclick="declineRoom(Number('<%= roomRequest.id %>'))">거절</button>
+							</li>
+						<% } %>
+						<% if (!user.roomRequests.length) { %>
+							<li>방 초대 요청을 받지 않았습니다.</li>
+						<% } %>
+					</ul>
+				</div>
+			</div>
+		</dialog>
+		<dialog id="requestDialog">
+			<button class="close">X</button>
+			<h1>친구 요청하기</h1>
+			<div>
+				<input type="text" id="friendRequestInput" />
+				<button onclick="requestFriend()">친구 요청 보내기</button>
+			</div>
+		</dialog>
+		<dialog id="inviteDialog">
+			<button class="close">X</button>
+			<h1>방 초대하기</h1>
+			<div>
+				초대할 방: <select id="inviteRoomSelect">
+					<% for (let room of user.chatRooms) { %>
+						<option value="<%= room.id %>"><%= room.roomname %></option>
+					<% } %>
+					<% if (!user.friends.length) { %>
+						<option value="-1" selected disabled>없음</option>
+					<% } %>
+				</select><br />
+				초대할 친구: <select id="inviteFriendSelect" multiple>
+					<% for (let friend of user.friends) { %>
+						<option value="<%= friend %>"><%= friend %></option>
+					<% } %>
+					<% if (!user.friends.length) { %>
+						<option value="" disabled>없음</option>
+					<% } %>
+				</select><br />
+				<button onclick="invite()">초대 요청 보내기</button>
+			</div>
+		</dialog>
 
-			Flex display
-			3/10 Left - Friend list
-			2/10 Middle - Room list
-			5/10 Right - Chat area
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="/js/index.js"></script>
+		<script src="/js/chat.js"></script>
+		<script>
+			const openDialogLinks = document.querySelectorAll("#openList, #openRequest, #openInvite");
+			const closeButtons = document.querySelectorAll(".close");
 
-			Dialog
-			Room request list, Friend request list dialog
-			Friend request dialog
-		-->
+			for (let link of openDialogLinks) {
+				link.addEventListener("click", () => document.getElementById(link.id.substring(4, link.id.length).toLowerCase() + "Dialog").showModal());
+			}
+
+			for (let button of closeButtons) {
+				button.addEventListener("click", () => button.parentElement.close());
+			}
+		</script>
 	<% } else { %>
-		<h1>Messagob</h1>
-		<p>간단한 채팅 앱.</p>
-		<p><button onclick="location.assign('/user/login')">로그인하기</button></p>
+		<%- include("header.ejs") %>
+		<main>
+			<h1>Messagob</h1>
+			<p>간단한 채팅 앱.</p>
+			<p><button onclick="location.assign('/user/login')">로그인하기</button></p>
+		</main>
 	<% } %>
 	<%- include("footer.ejs") %>
 </body>
