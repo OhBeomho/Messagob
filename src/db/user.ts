@@ -49,7 +49,7 @@ export class User {
 		await db.query(`UPDATE "user" SET friendrequests = ARRAY_APPEND(friendrequests, $1) WHERE username = $2`, [this.username, username]);
 	}
 
-	async accept(username: string) {
+	async acceptFriend(username: string) {
 		if (!(await db.query(`SELECT EXISTS(SELECT * FROM "user" WHERE username = $1 AND $2 = ANY(friendrequests))`, [this.username, username]))) {
 			throw new Error(username + "님의 요청이 없습니다.");
 		}
@@ -62,7 +62,7 @@ export class User {
 		this.friends.push(username);
 	}
 
-	async decline(username: string) {
+	async declineFriend(username: string) {
 		if (!(await db.query(`SELECT EXISTS(SELECT * FROM "user" WHERE username $1 SND $2 = ANY(friendrequests))`, [this.username, username]))) {
 			throw new Error(username + "님의 요청이 없습니다.");
 		}

@@ -68,6 +68,7 @@
 			<h1>요청 목록</h1>
 			<div>
 				<div>
+					<h3>친구 요청</h3>
 					<ul>
 						<% for (let friendRequest of user.friendRequests) { %>
 							<li id="Request<%= friendRequest %>">
@@ -82,6 +83,7 @@
 					</ul>
 				</div>
 				<div>
+					<h3>방 초대 요청</h3>
 					<ul>
 						<% for (let roomRequest of user.roomRequests) { %>
 							<li id="RoomRequest<%= roomRequest.id %>">

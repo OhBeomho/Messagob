@@ -13,7 +13,9 @@ router.post("/inviteroom/:roomid", (req, res) => {
 			for (let user of users) {
 				user.inviteRoom(parseInt(roomid)).catch((e) => res.status(500).send(e));
 			}
-		}).catch(() => res.sendStatus(500));
+
+			res.sendStatus(200);
+		}).catch((e) => res.status(500).send(e));
 });
 
 router.get("/acceptroom/:roomid", (req, res) => {
@@ -29,16 +31,22 @@ router.get("/acceptroom/:roomid", (req, res) => {
 		});
 });
 
-router.get("/declineroom/:roomid", (req, _res) => {
+router.get("/declineroom/:roomid", (req, res) => {
 	const { roomid } = req.params;
 	req.session.user && User.getUser(req.session.user)
-		.then((user) => user.declineRoom(parseInt(roomid)));
+		.then((user) => {
+			user.declineRoom(parseInt(roomid));
+			res.sendStatus(200);
+		});
 });
 
-router.get("/leaveroom/:roomid", (req, _res) => {
+router.get("/leaveroom/:roomid", (req, res) => {
 	const { roomid } = req.params;
 	req.session.user && User.getUser(req.session.user)
-		.then((user) => user.leaveRoom(parseInt(roomid)));
+		.then((user) => {
+			user.leaveRoom(parseInt(roomid));
+			res.sendStatus(200);
+		});
 });
 
 router.get("/createroom/:roomname", (req, res) => {

@@ -38,7 +38,7 @@ window.addEventListener("load", () => {
 		});
 	}
 
-	socket.emit("rooms", [roomIDArray]);
+	socket.emit("rooms", roomIDArray);
 });
 
 function showMessages(roomID) {
@@ -114,13 +114,13 @@ function sendRequest(method, url, data, callback) {
 }
 
 function acceptFriend(username) {
-	document.getElementById("Request" + username).querySelector("button").disabled = true;
+	document.getElementById("Request" + username).querySelectorAll("button").forEach((button) => (button.disabled = true));
 
 	sendRequest("GET", "/user/acceptfriend/" + username, {}, (status, response) => {
 		if (status === 500) {
 			alert("서버에서 오류가 발생하였습니다.");
 			console.error(response);
-			document.getElementById("Request" + username).querySelector("button").disabled = false;
+			document.getElementById("Request" + username).querySelectorAll("button").forEach((button) => (button.disabled = false));
 			return;
 		}
 
@@ -142,18 +142,18 @@ function acceptFriend(username) {
 }
 
 function declineFriend(username) {
-	document.getElementById("Request" + username).querySelector("button").disabled = true;
+	document.getElementById("Request" + username).querySelectorAll("button").forEach((button) => (button.disabled = true));
 	sendRequest("GET", "/user/declinefriend/" + username, {}, (_status, _response) => document.getElementById("Request" + username).remove());
 }
 
 function acceptRoom(roomID) {
-	document.getElementById("RoomRequest" + roomID).querySelector("button").disabled = true;
+	document.getElementById("RoomRequest" + roomID).querySelectorAll("button").forEach((button) => (button.disabled = true));
 
 	sendRequest("GET", "/room/acceptroom/" + roomID, {}, (status, response) => {
 		if (status === 500) {
 			alert("서버에서 오류가 발생하였습니다.");
 			console.error(response);
-			document.getElementById("RoomRequest" + roomID).querySelector("button").disabled = false;
+			document.getElementById("RoomRequest" + roomID).querySelectorAll("button").forEach((button) => (button.disabled = false));
 			return;
 		}
 
@@ -167,7 +167,7 @@ function acceptRoom(roomID) {
 			<b>${response}</b>
 		`;
 		roomElement.addEventListener("click", () => {
-			if (![XMLHttpRequest.UNSET, XMHttpRequest.DONE].includes(xhr.readyState)) {
+			if (![0, 4].includes(xhr.readyState)) {
 				return;
 			}
 
@@ -191,7 +191,7 @@ function acceptRoom(roomID) {
 }
 
 function declineRoom(roomID) {
-	document.getElementById("RoomRequest" + roomID).querySelector("button").disabled = true;
+	document.getElementById("RoomRequest" + roomID).querySelectorAll("button").forEach((button) => (button.disabled = true));
 	sendRequest("GET", "/room/declineroom/" + roomID, {}, (_status, _response) => document.getElementById("RoomRequest" + roomID).remove());
 }
 

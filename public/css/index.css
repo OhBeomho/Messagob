@@ -126,7 +126,7 @@ li {
 	border-radius: 8px;
 	padding: 6px;
 	max-width: 70%;
-	white-space: pre;
+	white-space: pre-wrap;
 	word-break: break-all;
 }
 

@@ -5,7 +5,7 @@ import { User, UserManager } from "../db/user";
 const router = Router();
 
 router.route("/login")
-	.get((_, res) => res.render("login"))
+	.get((_req, res) => res.render("login"))
 	.post((req, res, next) => {
 		const { username, password } = req.body;
 
@@ -78,16 +78,19 @@ router.get("/acceptfriend/:username", (req, res) => {
 	const { username } = req.params;
 	req.session.user && User.getUser(req.session.user)
 		.then((user) =>
-			user.accept(username)
+			user.acceptFriend(username)
 				.then(() => res.sendStatus(200))
 				.catch((e) => res.status(500).send(e))
 		);
 });
 
-router.get("/declinefriend/:username", (req, _res) => {
+router.get("/declinefriend/:username", (req, res) => {
 	const { username } = req.params;
 	req.session.user && User.getUser(req.session.user)
-		.then((user) => user.decline(username));
+		.then((user) => {
+			user.declineFriend(username);
+			res.sendStatus(200);
+		});
 });
 
 export default router;
