@@ -1,0 +1,121 @@
+#limv {
+	padding: 0;
+	flex-direction: row;
+	align-items: stretch;
+}
+
+section {
+	padding: 20px 5px;
+	display: flex;
+	flex-direction: column;
+}
+
+section ul {
+	flex: 1;
+	padding: 6px;
+	margin: 0;
+	list-style: none;
+	overflow: auto;
+}
+
+#friends {
+	flex: 2.5;
+}
+
+#rooms {
+	flex: 2.5;
+}
+
+#chat {
+	flex: 5;
+	background-color: rgb(230, 230, 230);
+}
+
+section .title {
+	font-size: 20px;
+	display: flex;
+	align-items: center;
+}
+
+section .title::before,
+section .title::after {
+	content: "";
+	height: 2.5px;
+	background-color: rgb(100, 100, 100);
+	flex: 1;
+	margin: 8px;
+}
+
+li {
+	user-select: none;
+}
+
+.friend,
+.room {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px;
+}
+
+.message {
+	display: flex;
+	align-items: flex-end;
+	gap: 6px;
+}
+
+.message .profile {
+	text-align: center;
+}
+
+.message .time {
+	font-size: 12px;
+	color: gray;
+}
+
+.message .message-bubble,
+.message .time {
+	margin: 4px 0;
+}
+
+.message.me {
+	flex-direction: row-reverse;
+}
+
+.message-bubble {
+	border-radius: 8px;
+	padding: 6px;
+}
+
+.message.me .message-bubble {
+	background-color: rgb(50, 50, 50);
+	color: white;
+	border-bottom-right-radius: 0;
+}
+
+.message.other .message-bubble {
+	background-color: white;
+	border-bottom-left-radius: 0;
+}
+
+li img {
+	border-radius: 50%;
+	width: 35px;
+	height: 35px;
+}
+
+#input {
+	display: flex;
+	align-items: stretch;
+	padding: 6px;
+}
+
+#input textarea {
+	flex: 1;
+}
+
+@media screen and (max-width: 1000px) {
+	#limv {
+		flex-direction: column;
+	}
+}

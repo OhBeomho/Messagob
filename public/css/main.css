@@ -1,0 +1,92 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap");
+
+html,
+body {
+	margin: 0;
+	font-family: "Noto Sans KR", sans-serif;
+}
+
+body {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+main {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+nav {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background-color: rgb(50, 50, 50);
+	padding: 20px 10px;
+}
+
+nav .brand {
+	font-size: 24px;
+}
+
+footer {
+	background-color: rgb(150, 150, 150);
+	text-align: center;
+}
+
+nav a {
+	color: white;
+}
+
+nav div a {
+	margin: 0 8px;
+	user-select: none;
+}
+
+footer a {
+	color: rgb(80, 80, 80);
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+input,
+textarea {
+	outline: none;
+	border: 1px solid rgb(50, 50, 50);
+	transition: all 0.2s;
+}
+
+input:hover,
+textarea:hover {
+	box-shadow: 0 0 0 2.5px rgba(50, 50, 50, 0.4);
+}
+
+input:focus,
+textarea:focus {
+	box-shadow: 0 0 0 2.5px rgba(50, 50, 50, 0.8);
+}
+
+button {
+	outline: none;
+	background-color: rgb(50, 50, 50);
+	color: white;
+	border: 0;
+	transition: all 0.2s;
+}
+
+button:hover {
+	background-color: rgb(20, 20, 20);
+}
+
+button:active {
+	box-shadow: 0 0 0 2.5px rgba(50, 50, 50, 0.8);
+}
