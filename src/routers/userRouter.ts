@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { ChatRoomManager } from "../db/chatroom";
 import { User, UserManager } from "../db/user";
 
 const router = Router();
@@ -13,10 +14,8 @@ router.route("/login")
 		} else {
 			UserManager.checkPassword(username, password)
 				.then(() => {
-					User.getUser(username).then((user) => {
-						req.session.user = user;
-						res.redirect("/");
-					});
+					req.session.user = username;
+					req.session.save(() => res.redirect("/"));
 				})
 				.catch((e) => next(e));
 		}
@@ -40,11 +39,14 @@ router.route("/signup")
 
 router.get("/logout", (req, res) => {
 	if (!req.session.user) {
+		res.redirect("/");
 		return;
 	}
 
-	req.session.destroy(() => {});
-	res.redirect("/");
+	req.session.destroy(() => {
+		res.clearCookie("connect.sid");
+		res.redirect("/");
+	});
 });
 
 router.get("/checkusername/:username", (req, res) => {
@@ -60,6 +62,32 @@ router.get("/checkusername/:username", (req, res) => {
 	UserManager.checkUsername(username)
 		.then((result) => res.status(200).send(result))
 		.catch(() => res.sendStatus(500));
+});
+
+router.get("/friendrequest/:username", (req, res) => {
+	const { username } = req.params;
+	req.session.user && User.getUser(req.session.user)
+		.then((user) =>
+			user.requestFriend(username)
+				.then(() => res.sendStatus(200))
+				.catch((e) => res.status(500).send(e))
+		);
+});
+
+router.get("/acceptfriend/:username", (req, res) => {
+	const { username } = req.params;
+	req.session.user && User.getUser(req.session.user)
+		.then((user) =>
+			user.accept(username)
+				.then(() => res.sendStatus(200))
+				.catch((e) => res.status(500).send(e))
+		);
+});
+
+router.get("/declinefriend/:username", (req, _res) => {
+	const { username } = req.params;
+	req.session.user && User.getUser(req.session.user)
+		.then((user) => user.decline(username));
 });
 
 export default router;
