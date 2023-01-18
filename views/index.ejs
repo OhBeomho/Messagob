@@ -43,9 +43,11 @@
 				<div class="title">방 목록</div>
 				<ul id="roomList">
 					<% for (let room of user.chatRooms) { %>
-						<li class="room" data-roomid="<%= room.id %>">
+						<li class="room" data-roomid="<%= room.id %>"
+							title="<%= room.owner + (room.users.length ? (", " + room.users.slice(0, 3).join(", ") + (room.users.length + 1 > 3 ? " ..." : "")) : "") %>">
 							<img src="/images/chat.png" alt="" />
 							<b><%= room.roomname %></b>
+							<span style="color: darkgray">(<%= room.users.length + 1 %>)<span>
 						</li>
 					<% } %>
 					<% if (!user.friends.length) { %>
