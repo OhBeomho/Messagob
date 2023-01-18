@@ -1,21 +1,22 @@
 import db from "./database";
-import { ChatRoomManager } from "./chatroom";
+import { ChatRoom, ChatRoomManager } from "./chatroom";
 
 export class User {
-	username: string;
-	friends: string[];
-	chatRooms: number[];
-	friendRequests: string[];
-	roomRequests: number[];
-
 	static async getUser(username: string) {
 		const { rows } = await db.query(`SELECT friends, chatrooms, friendrequests, roomrequests FROM "user" WHERE username = $1`, [username]);
 		if (!rows[0]) {
 			return new User("-", [], [], [], []);
 		} else {
 			const { friends, chatrooms, friendrequests, roomrequests } = rows[0];
-			return new User(username, friends, friendrequests, roomrequests, chatrooms);
+			const chatrooms_ = await ChatRoomManager.getChatRooms(chatrooms);
+			const roomrequests_ = await ChatRoomManager.getChatRooms(roomrequests);
+
+			return new User(username, friends, friendrequests, roomrequests_, chatrooms_);
 		}
+	}
+
+	static async getUsers(usernameArray: string) {
+		return (await db.query(`SELECT * FROM "user" WHERE username = ANY($1)`, [usernameArray])).rows as User[];
 	}
 
 	static async createUser(username: string, password: string) {
@@ -28,67 +29,78 @@ export class User {
 		await db.query(`INSERT INTO "user"(username, password) VALUES($1, $2)`, [username, password]);
 	}
 
-	private constructor(username: string, friends: string[], friendRequests: string[], roomRequests: number[], chatRooms: number[]) {
-		this.username = username;
-		this.friends = friends;
-		this.friendRequests = friendRequests;
-		this.roomRequests = roomRequests;
-		this.chatRooms = chatRooms;
-	}
+	private constructor(public username: string, public friends: string[], public friendRequests: string[],
+		public roomRequests: ChatRoom[], public chatRooms: ChatRoom[]) { }
 
-	async requestFriend(targetUsername: string) {
-		if (!(await db.query(`SELECT EXISTS(SELECT * FROM "user" WHERE username = $1)`, [targetUsername])).rows[0].exists) {
+	async requestFriend(username: string) {
+		if (!(await db.query(`SELECT EXISTS(SELECT * FROM "user" WHERE username = $1)`, [username])).rows[0].exists) {
 			throw new Error("존재하지 않는 사용자입니다.");
 		}
 
-		const { friendrequests: friendRequests, friends } = (await db.query(`SELECT friendrequests, friends FROM "user" WHERE username = $1`, [targetUsername])).rows[0];
+		const { friendrequests: friendRequests } = (await db.query(`SELECT friendrequests FROM "user" WHERE username = $1`, [username])).rows[0];
 
 		if (friendRequests.includes(this.username)) {
 			throw new Error("이미 요청을 보냈습니다.");
-		} else if (friends.includes(this.username)) {
+		} else if (this.friends.includes(this.username)) {
 			throw new Error("이미 친구입니다.");
 		}
 
-		await db.query(`UPDATE "user" SET friendrequests = ARRAY_APPEND(friendrequests, $1) WHERE username = $2`, [this.username, targetUsername]);
+		await db.query(`UPDATE "user" SET friendrequests = ARRAY_APPEND(friendrequests, $1) WHERE username = $2`, [this.username, username]);
 	}
 
-	async accept(requestUsername: string) {
-		if (!(await db.query(`SELECT EXISTS(SELECT * FROM "user" WHERE username = $1 AND $2 = ANY(friendrequests))`, [this.username, requestUsername]))) {
-			throw new Error(requestUsername + "님의 요청이 없습니다.");
+	async accept(username: string) {
+		if (!(await db.query(`SELECT EXISTS(SELECT * FROM "user" WHERE username = $1 AND $2 = ANY(friendrequests))`, [this.username, username]))) {
+			throw new Error(username + "님의 요청이 없습니다.");
 		} else {
-			await db.query(`UPDATE "user" SET friendrequests = ARRAY_REMOVE(friendrequests, $1) WHERE username = $2`, [requestUsername, this.username]);
-			await db.query(`UPDATE "user" SET friends = ARRAY_APPEND(friends, $1) WHERE username = $2`, [requestUsername, this.username]);
-			await db.query(`UPDATE "user" SET friends = ARRAY_APPEND(friends, $1) WHERE username = $2`, [this.username, requestUsername]);
+			await db.query(`UPDATE "user" SET friendrequests = ARRAY_REMOVE(friendrequests, $1) WHERE username = $2`, [username, this.username]);
+			await db.query(`UPDATE "user" SET friends = ARRAY_APPEND(friends, $1) WHERE username = $2`, [username, this.username]);
+			await db.query(`UPDATE "user" SET friends = ARRAY_APPEND(friends, $1) WHERE username = $2`, [this.username, username]);
+
+			this.friendRequests.splice(this.friendRequests.indexOf(username), 1);
+			this.friends.push(username);
 		}
 	}
 
-	async decline(requestUsername: string) {
-		if (!(await db.query(`SELECT EXISTS(SELECT * FROM "user" WHERE username $1 SND $2 = ANY(friendrequests))`, [this.username, requestUsername]))) {
-			throw new Error(requestUsername + "님의 요청이 없습니다.");
+	async decline(username: string) {
+		if (!(await db.query(`SELECT EXISTS(SELECT * FROM "user" WHERE username $1 SND $2 = ANY(friendrequests))`, [this.username, username]))) {
+			throw new Error(username + "님의 요청이 없습니다.");
 		} else {
-			await db.query(`UPDATE "user" SET friendrequests = ARRAY_REMOVE(friendrequests, $1) WHERE username = $2`, [requestUsername, this.username]);
+			await db.query(`UPDATE "user" SET friendrequests = ARRAY_REMOVE(friendrequests, $1) WHERE username = $2`, [username, this.username]);
+
+			this.friendRequests.splice(this.friendRequests.indexOf(username), 1);
 		}
 	}
 
 	async inviteRoom(roomID: number) {
-		const exists = (await ChatRoomManager.getChatRoom(roomID)).id !== -1;
-		if (!exists) {
-			throw new Error("존재하지 않는 방입니다.");
+		if (this.roomRequests.map((room) => room.id).includes(roomID)) {
+			throw new Error("이미 초대가 되었습니다.");
 		}
 
 		await db.query(`UPDATE "user" SET roomrequests = ARRAY_APPEND(roomrequests, $1) WHERE username = $2`, [roomID, this.username]);
+		this.roomRequests.push(await ChatRoomManager.getChatRoom(roomID));
 	}
 
 	async joinRoom(roomID: number) {
-		const { rows } = await db.query(`SELECT roomrequests FROM "user" WHERE username = $1`, [this.username]);
-		const { roomrequests } = rows[0];
-
-		if (!roomrequests.includes(roomID)) {
-			throw new Error("초대받지 않거나 존재하지 않는 방입니다.");
+		if (!this.roomRequests.map((room) => room.id).includes(roomID)) {
+			throw new Error("초대받지 않은 방입니다.");
+		} else if (this.chatRooms.map((room) => room.id).includes(roomID)) {
+			throw new Error("이미 방 인원입니다.");
 		}
 
 		await db.query(`UPDATE "user" SET roomrequests = ARRAY_REMOVE(roomrequests, $1) WHERE username = $2`, [roomID, this.username]);
 		await db.query("UPDATE chatroom SET users = ARRAY_APPEND(users, $1) WHERE id = $2", [this.username, roomID]);
+
+		this.roomRequests.splice(this.roomRequests.indexOf(this.roomRequests.find((room) => room.id === roomID) as ChatRoom), 1);
+		this.chatRooms.push(await ChatRoomManager.getChatRoom(roomID));
+	}
+
+	async declineRoom(roomID: number) {
+		if (!this.roomRequests.map((room) => room.id).includes(roomID)) {
+			throw new Error("초대받지 않은 방입니다.");
+		}
+
+		await db.query(`UPDATE "user" SET roomrequests = ARRAY_REMOVE(roomrequests, $1) WHERE username = $2`, [roomID, this.username]);
+		this.roomRequests.splice(this.roomRequests.indexOf(this.roomRequests.find((room) => room.id === roomID) as ChatRoom), 1);
 	}
 
 	async leaveRoom(roomID: number) {
@@ -100,6 +112,7 @@ export class User {
 		}
 
 		await db.query("UPDATE chatroom SET users = ARRAY_REMOVE(users, $1) WHERE id = $2", [this.username, roomID]);
+		this.chatRooms.splice(this.chatRooms.indexOf(room), 1);
 	}
 }
 
