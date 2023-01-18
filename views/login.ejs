@@ -6,29 +6,37 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Messagob</title>
+	<link rel="stylesheet" href="/css/main.css">
+	<style>
+		form {
+			text-align: center;
+		}
+	</style>
 </head>
 
 <body>
 	<%- include("header.ejs") %>
-	<form action="/user/login" method="post">
-		<h1>로그인</h1>
-		<table>
-			<tr>
-				<td>사용자명</td>
-				<td><input type="text" name="username" minlength="3" required /></td>
-			</tr>
-			<tr>
-				<td>비밀번호</td>
-				<td><input type="password" name="password" required /></td>
-			</tr>
-			<tr>
-				<td colspan="2">
-					<button type="submit">로그인</button>
-					<a href="/user/signup">회원가입하기</a>
-				</td>
-			</tr>
-		</table>
-	</form>
+	<main>
+		<form action="/user/login" method="post">
+			<h1>로그인</h1>
+			<table>
+				<tr>
+					<td>사용자명</td>
+					<td><input type="text" name="username" minlength="3" required /></td>
+				</tr>
+				<tr>
+					<td>비밀번호</td>
+					<td><input type="password" name="password" required /></td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<button type="submit">로그인</button>
+						<a href="/user/signup">회원가입하기</a>
+					</td>
+				</tr>
+			</table>
+		</form>
+	</main>
 	<%- include("footer.ejs") %>
 </body>
 
