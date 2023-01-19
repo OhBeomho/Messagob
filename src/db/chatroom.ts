@@ -40,7 +40,8 @@ export class ChatRoomManager {
 	static async addMessage(id: number, message: Message) {
 		const chatRoom = await ChatRoomManager.getChatRoom(id);
 		if (chatRoom.messages.length >= 100) {
-			chatRoom.messages.shift();
+			const messageID = chatRoom.messages.shift()?.id;
+			await db.query("DELETE FROM message WHERE id = $1", [messageID]);
 		}
 
 		chatRoom.messages.push(message);
